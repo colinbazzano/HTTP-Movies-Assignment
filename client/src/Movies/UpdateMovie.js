@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, useHistory } from 'react-router-dom';
 import axios from 'axios';
-import { ETIME } from 'constants';
 
-const initialMovie = {
-    id: "",
-    title: "",
-    director: "",
-    metascore: "",
-    stars: ["", "", ""],
-};
+// const initialMovie = {
+//     id: "",
+//     title: "",
+//     director: "",
+//     metascore: "",
+//     stars: ["", "", ""],
+// };
 
 const UpdateMovie = props => {
-    const [movie, setMovie] = useState(initialMovie);
+    const [movie, setMovie] = useState({});
+    const params = useParams();
+    const history = useHistory();
 
     const changeHandler = e => {
         e.persist();
@@ -20,13 +22,27 @@ const UpdateMovie = props => {
             value = parseInt(value, 10);
         }
         setMovie({ ...movie, [e.target.name]: value });
-    }
+        if (e.target.name === 'stars') {
+            setMovie(prevData => ({
+                ...prevData,
+                [e.target.name]: e.target.value.split(",")
+            }));
+        } else {
+            setMovie(prevData => ({ ...prevData, [e.target.name]: e.target.value}));
+        }
+    };
+    useEffect(() => {
+        axios
+            .get(`http://localhost:5000/api/movies/${params.id}`)
+            .then(res => setMovie(res.data))
+            .catch(err => console.log(err));
+    }, [params.id]);
 
     const handleSubmit = e => {
         e.preventDefault();
         axios
-            .put(`http://localhost:5000/api/movies/${movie.id}`, movie)
-            .then(res => console.log(res))
+            .put(`http://localhost:5000/api/movies/${params.id}`, movie)
+            .then(res => history.push('/'))
             .catch(err => console.log(err));
     };
 
@@ -38,28 +54,28 @@ const UpdateMovie = props => {
                 <input 
                 type="text"
                 name="title"
-                onChange={changeHandler}
+                onChange={e => changeHandler(e)}
                 placeholder="Title"
                 value={movie.title}
                 />
                 <input
                 type="text"
                 name="director"
-                onChange={changeHandler}
+                onChange={e => changeHandler(e)}
                 placeholder="Director"
                 value={movie.director}
                 />
                 <input 
                 type="text"
                 name="metascore"
-                onChange={changeHandler}
+                onChange={e => changeHandler(e)}
                 placeholder="Metascore"
                 value={movie.metascore}
                 />
                 <input 
                 type="text"
                 name="stars"
-                onChange={changeHandler}
+                onChange={e => changeHandler(e)}
                 placeholder="Stars"
                 value={movie.stars}
                 />
